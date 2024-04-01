@@ -1,0 +1,18 @@
+# Modules Node.js
+node_modules
+
+# main files test
+main.js
+
+# package files
+package-lock.json
+package.json
+
+# redis dump file
+dump.rdb
+
+# eslint files
+.eslintrc.js
+
+# babel files
+babel.config.js
