@@ -2,6 +2,7 @@
 node_modules
 
 # main files test
+*-main.js
 main.js
 
 # package files
