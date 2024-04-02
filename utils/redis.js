@@ -8,6 +8,11 @@ class RedisClient {
     this.client.on('error', (error) => {
       console.log(` Redis client not connected: ${error.message}`);
     });
+
+    // Promisification of get, set, and del methods
+    this.getAsync = promisify(this.client.get).bind(this.client);
+    this.setAsync = promisify(this.client.set).bind(this.client);
+    this.delAsync = promisify(this.client.del).bind(this.client);
   }
 
   // Method to check if the Redis client is connected
@@ -17,19 +22,18 @@ class RedisClient {
 
   // Method to retrieve a value associated with a key in Redis
   async get(key) {
-    const getKey = promisify(this.client.get).bind(this.client);
-    const value = await getKey(key);
+    const value = await this.getAsync(key);
     return value;
   }
 
   // Method to set a value for a key in Redis
   async set(key, value, duration) {
-    this.client.set(key, value, 'EX', duration);
+    await this.setAsync(key, value, 'EX', duration);
   }
 
   // Method to delete a key and its associated value from Redis
   async del(key) {
-    this.client.del(key);
+    await this.delAsync(key);
   }
 }
 
