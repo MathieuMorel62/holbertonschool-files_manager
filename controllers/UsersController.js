@@ -1,7 +1,10 @@
 import sha1 from 'sha1';
+import { ObjectId } from 'mongodb';
+import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 
 class UsersController {
+  // Method to create a new user.
   static async postNew(request, response) {
     const { email, password } = request.body;
 
@@ -33,6 +36,27 @@ class UsersController {
       id: newUser.insertedId,
       email,
     });
+  }
+
+  // Method to obtain the information of the connected user.
+  static async getMe(request, response) {
+    // Retrieves the authentication token from the request header.
+    const token = request.headers['x-token'];
+
+    // Checks the existence and validity of the token.
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Retrieves the user corresponding to the token.
+    const user = await dbClient.db.collection('users').findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Returns the information of the logged-in user.
+    return response.status(200).json({ id: user._id, email: user.email });
   }
 }
 
