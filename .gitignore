@@ -17,3 +17,6 @@ dump.rdb
 
 # babel files
 babel.config.js
+
+image.png
+image_upload.py
