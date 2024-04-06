@@ -7,7 +7,7 @@ import redisClient from '../utils/redis';
 class FilesController {
   // Method to create a new file.
   static async postUpload(request, response) {
-    const token = request.header['X-Token'];
+    const token = request.header['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
 
     // Checks the existence and validity of the token.
@@ -41,15 +41,11 @@ class FilesController {
     }
 
     // Check if the parent folder exists.
+    let parentFile = null;
     if (parentId !== 0) {
-      const project = new ObjectId(parentId);
-      const file = await dbClient.db.collection('files').findOne({ _id: project });
-
-      if (!file) {
-        return response.status(400).json({ error: 'Parent not found' });
-      }
-      if (file.type !== 'folder') {
-        return response.status(400).json({ error: 'Parent is not a folder' });
+      parentFile = await dbClient.db.collection('files').findOne({ _id: ObjectId(parentId) });
+      if (!parentFile || parentFile.type !== 'folder') {
+        return response.status(400).json({ error: 'Parent not found or is not a folder' });
       }
     }
 
