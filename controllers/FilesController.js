@@ -94,6 +94,71 @@ class FilesController {
       parentId,
     });
   }
+
+  // Method to retrieve the information of a file.
+  static async getShow(request, response) {
+    // Retrieves the authentication token from the request header.
+    const token = request.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Retrieves the file information from the database.
+    const { id } = request.params;
+    const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(id), userId: ObjectId(userId) });
+    if (!file) {
+      return response.status(404).json({ error: 'Not found' });
+    }
+
+    // Formats the file information.
+    const filesFormatted = {
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    };
+
+    return response.status(200).json(filesFormatted);
+  }
+
+  // Method to retrieve the list of files.
+  static async getIndex(request, response) {
+    // Retrieves the authentication token from the request header.
+    const token = request.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Retrieves the parent ID and the page number from the request query.
+    const { parentId, page = 0 } = request.query;
+    const query = { userId: ObjectId(userId) };
+    if (parentId) {
+      query.parentId = parentId;
+    }
+
+    // Retrieves the list of files from the database.
+    const files = await dbClient.db.collection('files')
+      .find(query)
+      .skip(page * 20)
+      .limit(20)
+      .toArray();
+
+    // Formats the list of files.
+    const filesFormatted = files.map((file) => ({
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    }));
+
+    return response.status(200).json(filesFormatted);
+  }
 }
 
 export default FilesController;
