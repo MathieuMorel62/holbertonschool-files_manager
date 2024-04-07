@@ -105,9 +105,9 @@ class FilesController {
     }
 
     // Retrieves the file information from the database.
-    const { id } = request.params;
-    const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(id), userId: ObjectId(userId) });
-    if (!file || file.userId.toString() !== userId) {
+    const fileId = request.params.id;
+    const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(fileId), userId: ObjectId(userId) });
+    if (!file) {
       return response.status(404).json({ error: 'Not found' });
     }
 
