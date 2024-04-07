@@ -105,8 +105,8 @@ class FilesController {
     }
 
     // Retrieves the file information from the database.
-    const fileId = request.params.id;
-    const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(fileId), userId: ObjectId(userId) });
+    const { id } = request.params;
+    const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(id), userId: ObjectId(userId) });
     if (!file) {
       return response.status(404).json({ error: 'Not found' });
     }
@@ -142,9 +142,11 @@ class FilesController {
 
     // Retrieves the list of files from the database.
     const files = await dbClient.db.collection('files')
-      .find(query)
-      .skip(page * 20)
-      .limit(20)
+      .aggregate([
+        { $match: query },
+        { $skip: page * 20 },
+        { $limit: 20 },
+      ])
       .toArray();
 
     // Formats the list of files.
