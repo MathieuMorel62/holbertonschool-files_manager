@@ -40,12 +40,16 @@ class FilesController {
       return response.status(400).json({ error: 'Missing data' });
     }
 
-    // Check if the parent folder exists.
-    let parentFile = null;
     if (parentId !== 0) {
-      parentFile = await dbClient.db.collection('files').findOne({ _id: ObjectId(parentId) });
-      if (!parentFile || parentFile.type !== 'folder') {
-        return response.status(400).json({ error: 'Parent not found or is not a folder' });
+      // Modification: Utilisation de mongodb.ObjectId pour créer l'ObjectId
+      const project = new ObjectId(parentId);
+      const file = await dbClient.db.collection('files').findOne({ _id: project });
+
+      if (!file) {
+        return response.status(400).json({ error: 'Parent not found' });
+      }
+      if (file.type !== 'folder') {
+        return response.status(400).json({ error: 'Parent is not a folder' });
       }
     }
 
