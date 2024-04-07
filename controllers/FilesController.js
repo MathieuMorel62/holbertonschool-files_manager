@@ -72,7 +72,7 @@ class FilesController {
 
       // Write the file to the server.
       const localPath = `${folderPath}/${uuidv4()}`;
-      const buff = Buffer.from(request.body.data, 'base64').toString('utf-8');
+      const buff = Buffer.from(request.body.data, 'base64');
       await fs.promises.writeFile(localPath, buff);
       newFile = await dbClient.db.collection('files').insertOne({
         userId: new ObjectId(userId),
