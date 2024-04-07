@@ -131,11 +131,10 @@ class FilesController {
     }
 
     // Retrieves the parent ID and the page number from the request query.
-    const parentId = request.query.parentId || 0;
-    const page = parseInt(request.query.page, 10) || 0;
+    const { parentId, page = 0 } = request.query;
     const query = { userId: ObjectId(userId) };
-    if (parentId !== 0) {
-      query.parentId = parentId;
+    if (parentId) {
+      query.parentId = ObjectId(parentId);
     }
 
     // Retrieves the list of files from the database.
