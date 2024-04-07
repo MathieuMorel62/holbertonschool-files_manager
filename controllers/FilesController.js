@@ -138,15 +138,15 @@ class FilesController {
     const query = { userId: ObjectId(userId) };
     if (parentId) {
       query.parentId = parentId;
+    } else {
+      query.parentId = 0;
     }
 
     // Retrieves the list of files from the database.
     const files = await dbClient.db.collection('files')
-      .aggregate([
-        { $match: query },
-        { $skip: page * 20 },
-        { $limit: 20 },
-      ])
+      .find(query)
+      .skip(page * 20)
+      .limit(20)
       .toArray();
 
     // Formats the list of files.
