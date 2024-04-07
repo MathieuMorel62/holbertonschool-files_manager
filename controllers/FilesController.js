@@ -111,17 +111,14 @@ class FilesController {
       return response.status(404).json({ error: 'Not found' });
     }
 
-    // Formats the file information.
-    const filesFormatted = {
+    return response.status(200).json({
       id: file._id,
       userId: file.userId,
       name: file.name,
       type: file.type,
       isPublic: file.isPublic,
       parentId: file.parentId,
-    };
-
-    return response.status(200).json(filesFormatted);
+    });
   }
 
   // Method to retrieve the list of files.
@@ -134,12 +131,11 @@ class FilesController {
     }
 
     // Retrieves the parent ID and the page number from the request query.
-    const { parentId, page = 0 } = request.query;
+    const parentId = request.query.parentId || 0;
+    const page = parseInt(request.query.page, 10) || 0;
     const query = { userId: ObjectId(userId) };
-    if (parentId) {
+    if (parentId !== 0) {
       query.parentId = parentId;
-    } else {
-      query.parentId = 0;
     }
 
     // Retrieves the list of files from the database.
