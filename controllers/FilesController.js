@@ -134,11 +134,7 @@ class FilesController {
     const { parentId, page = 0 } = request.query;
     const query = { userId: ObjectId(userId) };
     if (parentId) {
-      if (typeof parentId === 'number') {
-        query.parentId = ObjectId(parentId);
-      } else {
-        query.parentId = parentId;
-      }
+      query.parentId = ObjectId(parentId);
     }
 
     // Retrieves the list of files from the database.
