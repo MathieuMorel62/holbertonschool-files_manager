@@ -1,9 +1,12 @@
+import Bull from 'bull';
 import { ObjectId } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import mime from 'mime-types';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
+
+const fileQueue = new Bull('fileQueue');
 
 class FilesController {
   // Method to create a new file.
@@ -83,6 +86,10 @@ class FilesController {
         parentId,
         localPath,
       });
+
+      if (type === 'image') {
+        fileQueue.add({ userId, fileId: newFile.insertedId });
+      }
     }
 
     // Return the new file.
@@ -223,40 +230,56 @@ class FilesController {
   }
 
   // Method to retrieve the content of a file specified by its ID.
-  static async getFile(req, res) {
+  static async getFile(request, response) {
     // Retrieve the file ID from the request settings.
-    const { id } = req.params;
+    const { id } = request.params;
     const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(id) });
 
     // Check if the file exists.
     if (!file) {
-      return res.status(404).json({ error: 'Not found' });
+      return response.status(404).json({ error: 'Not found' });
     }
 
     // Retrieve the user's authentication token if present.
-    const token = req.headers['x-token'];
+    const token = request.headers['x-token'];
     const userId = token ? await redisClient.get(`auth_${token}`) : null;
 
     // Check if the file is public or if the user is authorized to access it.
     if (!file.isPublic && (!userId || file.userId.toString() !== userId)) {
-      return res.status(404).json({ error: 'Not found' });
+      return response.status(404).json({ error: 'Not found' });
     }
 
     // Check if the file is a folder, in which case its contents cannot be retrieved.
     if (file.type === 'folder') {
-      return res.status(400).json({ error: 'A folder doesn\'t have content' });
+      return response.status(400).json({ error: 'A folder doesn\'t have content' });
+    }
+
+    // Check if the file is an image and if a thumbnail size is requested.
+    if (request.query.size) {
+      const size = parseInt(request.query.size, 10);
+      const thumbnailPath = `${file.localPath}_${size}`;
+
+      // Check if the thumbnail exists locally on the server.
+      if (!fs.existsSync(thumbnailPath)) {
+        return response.status(404).json({ error: 'Not found' });
+      }
+
+      // Determine the MIME type of the file.
+      const mimeType = mime.lookup(file.name);
+      response.setHeader('Content-Type', mimeType || 'text/plain');
+      return response.status(200).sendFile(thumbnailPath);
     }
 
     // Check if the file exists locally on the server.
     if (!fs.existsSync(file.localPath)) {
-      return res.status(404).json({ error: 'Not found' });
+      return response.status(404).json({ error: 'Not found' });
     }
 
     // Determine the MIME type of the file.
     const mimeType = mime.lookup(file.name);
-    res.setHeader('Content-Type', mimeType || 'text/plain');
+    response.setHeader('Content-Type', mimeType || 'text/plain');
 
-    return res.status(200).sendFile(file.localPath);
+    return response.status(200).sendFile(file.localPath);
   }
 }
 
