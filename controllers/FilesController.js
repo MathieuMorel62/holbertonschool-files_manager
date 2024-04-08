@@ -170,7 +170,7 @@ class FilesController {
     const result = await dbClient.db.collection('files').findOneAndUpdate(
       { _id: ObjectId(id), userId: ObjectId(userId) },
       { $set: { isPublic: true } },
-      { returnDocument: 'after' },
+      { returnOriginal: false },
     );
 
     // Manages the case where the file is not found.
@@ -202,7 +202,7 @@ class FilesController {
     const result = await dbClient.db.collection('files').findOneAndUpdate(
       { _id: ObjectId(id), userId: ObjectId(userId) },
       { $set: { isPublic: false } },
-      { returnDocument: 'after' },
+      { returnOriginal: false },
     );
 
     // Manages the case where the file is not found.
