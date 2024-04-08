@@ -11,8 +11,11 @@ fileQueue.process(async (job) => {
   const { fileId, userId } = job.data;
 
   // Check if the fileId and userId are provided
-  if (!fileId || !userId) {
-    throw new Error('Missing fileId or userId');
+  if (!fileId) {
+    throw new Error('Missing fileId');
+  }
+  if (!userId) {
+    throw new Error('Missing userId');
   }
 
   // Retrieve the file from the database
