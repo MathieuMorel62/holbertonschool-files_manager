@@ -156,6 +156,70 @@ class FilesController {
 
     return response.status(200).json(filesFormatted);
   }
+
+  // Authenticates the user before modifying the file.
+  static async putPublish(request, response) {
+    const token = request.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Retrieves the specified file and updates its status to "public".
+    const { id } = request.params;
+    const result = await dbClient.db.collection('files').findOneAndUpdate(
+      { _id: ObjectId(id), userId: ObjectId(userId) },
+      { $set: { isPublic: true } },
+      { returnOriginal: false },
+    );
+
+    // Manages the case where the file is not found.
+    if (!result.value) {
+      return response.status(404).json({ error: 'Not found' });
+    }
+
+    // Returns the information of the updated file.
+    return response.status(200).json({
+      id: result.value._id,
+      userId: result.value.userId,
+      name: result.value.name,
+      type: result.value.type,
+      isPublic: result.value.isPublic,
+      parentId: result.value.parentId,
+    });
+  }
+
+  // Method to make a file non-public (remove the publication).
+  static async putUnpublish(request, response) {
+    const token = request.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Updates the status of the specified file to "non-public".
+    const { id } = request.params;
+    const result = await dbClient.db.collection('files').findOneAndUpdate(
+      { _id: ObjectId(id), userId: ObjectId(userId) },
+      { $set: { isPublic: false } },
+      { returnOriginal: false },
+    );
+
+    // Manages the case where the file is not found.
+    if (!result.value) {
+      return response.status(404).json({ error: 'Not found' });
+    }
+
+    // Returns the information of the updated file.
+    return response.status(200).json({
+      id: result.value._id,
+      userId: result.value.userId,
+      name: result.value.name,
+      type: result.value.type,
+      isPublic: result.value.isPublic,
+      parentId: result.value.parentId,
+    });
+  }
 }
 
 export default FilesController;
