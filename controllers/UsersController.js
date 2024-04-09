@@ -1,7 +1,10 @@
 import sha1 from 'sha1';
+import Bull from 'bull';
 import { ObjectId } from 'mongodb';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
+
+const userQueue = new Bull('userQueue');
 
 class UsersController {
   // Method to create a new user.
@@ -30,6 +33,14 @@ class UsersController {
       email,
       password: hashedPassword,
     });
+
+    // Add the user to the queue
+    if (newUser.insertedId) {
+      userQueue.add({
+        userId: newUser.insertedId,
+        email,
+      });
+    }
 
     // Return the new user
     return response.status(201).json({
