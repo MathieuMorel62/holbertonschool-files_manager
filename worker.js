@@ -5,6 +5,7 @@ import imageThumbnail from 'image-thumbnail';
 import dbClient from './utils/db';
 
 const fileQueue = new Bull('fileQueue');
+const userQueue = new Bull('userQueue');
 
 // Process the fileQueue
 fileQueue.process(async (job) => {
@@ -31,4 +32,20 @@ fileQueue.process(async (job) => {
     const thumbnail = await imageThumbnail(file.localPath, { width: size });
     fs.writeFileSync(`${file.localPath}_${size}`, thumbnail);
   });
+});
+
+// Process the userQueue
+userQueue.process(async (job) => {
+  const { userId } = job.data;
+
+  if (!userId) {
+    throw new Error('Missing userId');
+  }
+
+  const user = await dbClient.db.collection('users').findOne({ _id: ObjectId(userId) });
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  console.log(`Welcome ${user.email}!`);
 });
