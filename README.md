@@ -1,4 +1,6 @@
-# Files Manager
+# <p align="center">Files Manager Project</p>
+
+![files manager](https://github.com/MathieuMorel62/holbertonschool-files_manager/assets/113856302/8d8080f2-b435-472a-b7d8-b00cb101c9ce)
 
 ## 📝 Description
 
